@@ -50,6 +50,7 @@ func sendStdin(c *twitch.Client, twChan string) {
 }
 
 func main() {
+	paneTitle := "chatwindow"
 	twUser := os.Getenv("TWITCH_USERNAME")
 	twToken := os.Getenv("TWITCH_TOKEN")
 	client := twitch.NewClient(twUser, twToken)
@@ -60,6 +61,9 @@ func main() {
 			  print u"\u001b[0m"
 		    colorReset := "\033[0m"
 	*/
+
+	// printf '\033]2;%s\033\\' 'findme'
+	fmt.Printf("\033]2;%s\033\\", paneTitle)
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 		colorCode := fmt.Sprintf("\033[38;2;%sm", hexRGB(message.User.Color, message.User.Name))
