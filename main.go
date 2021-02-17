@@ -66,10 +66,13 @@ func main() {
 	client := twitch.NewClient(twUser, twToken)
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
+		bits := message.Bits
 		colorCode := fmt.Sprintf("\033[38;2;%sm", hexRGB(message.User.Color, message.User.Name))
 		bgColorCode := ""
 		resetColor := "\033[0m"
-		if strings.Contains(message.Tags["msg-id"], "highlighted-message") {
+		if bits > 0 {
+			bgColorCode = fmt.Sprintf("\033[48;2;%sm", hexRGB("#f36f00", "highlight-color-bitsbits"))
+		} else if strings.Contains(message.Tags["msg-id"], "highlighted-message") {
 			bgColorCode = fmt.Sprintf("\033[48;2;%sm", hexRGB("#755ebc", "highlight-color-rexroof"))
 		}
 		fmt.Printf("[%s%s%s]: %s%s%s\n", colorCode, message.User.Name, resetColor, bgColorCode, message.Message, resetColor)
