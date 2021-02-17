@@ -43,42 +43,45 @@ func sendStdin(c *twitch.Client, twChan string) {
 			fmt.Printf("quitting!\n")
 			break
 		}
-		fmt.Printf("SENDING: %s", text)
-		c.Say(twChan, text)
+		if len(text) != 0 {
+			c.Say(twChan, text)
+		}
 	}
 	c.Disconnect()
 }
 
 func main() {
-	paneTitle := "chatwindow"
 	twUser := os.Getenv("TWITCH_USERNAME")
 	twToken := os.Getenv("TWITCH_TOKEN")
+	twChannel := os.Getenv("TWITCH_CHANNEL")
+	if len(twChannel) == 0 {
+		twChannel = twUser
+	}
+
+	paneTitle := os.Getenv("PANE_TITLE")
+	if len(paneTitle) > 0 {
+		fmt.Printf("\033]2;%s\033\\", paneTitle)
+	}
+
 	client := twitch.NewClient(twUser, twToken)
-
-	/*
-				#D2691E
-			  sys.stdout.write(u"\u001b[38;5;" + code + "m " + code.ljust(4))
-			  print u"\u001b[0m"
-		    colorReset := "\033[0m"
-	*/
-
-	// printf '\033]2;%s\033\\' 'findme'
-	fmt.Printf("\033]2;%s\033\\", paneTitle)
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 		colorCode := fmt.Sprintf("\033[38;2;%sm", hexRGB(message.User.Color, message.User.Name))
-		fmt.Printf("[%s%s%s]: %s\n", colorCode, message.User.Name, "\033[0m", message.Message)
+		bgColorCode := ""
+		resetColor := "\033[0m"
+		if strings.Contains(message.Tags["msg-id"], "highlighted-message") {
+			bgColorCode = fmt.Sprintf("\033[48;2;%sm", hexRGB("#755ebc", "highlight-color-rexroof"))
+		}
+		fmt.Printf("[%s%s%s]: %s%s%s\n", colorCode, message.User.Name, resetColor, bgColorCode, message.Message, resetColor)
 	})
 
-	client.Join(twUser)
-	// client.Join("middleditch")
-
-	go sendStdin(client, twUser)
+	client.Join(twChannel)
+	go sendStdin(client, twChannel)
 
 	err := client.Connect()
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("heeeeeey")
+	fmt.Println("[exiting]")
 }
