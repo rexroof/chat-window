@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gempir/go-twitch-irc"
+	"github.com/gempir/go-twitch-irc/v2"
 )
 
 var globalColors = map[string]string{}
@@ -28,6 +28,15 @@ func hexRGB(s string, u string) string {
 			globalColors[u] = fmt.Sprintf("%d;%d;%d", red, green, blue)
 			return globalColors[u]
 		}
+	} else if red+green+blue < 150 {
+		// bump up colors if they are too dark.
+		//  potentially update this to instead mask background
+		// 24 24 27 = 75  [xmetrix]
+		// 14 12 19 = 45  [nyxiative]
+		factor := int((160 - red - green - blue) / 3)
+		red += factor
+		green += factor
+		blue += factor
 	}
 	return fmt.Sprintf("%d;%d;%d", red, green, blue)
 }
@@ -73,8 +82,11 @@ func main() {
 		if bits > 0 {
 			bgColorCode = fmt.Sprintf("\033[48;2;%sm", hexRGB("#f36f00", "highlight-color-bitsbits"))
 		} else if strings.Contains(message.Tags["msg-id"], "highlighted-message") {
-			bgColorCode = fmt.Sprintf("\033[48;2;%sm", hexRGB("#755ebc", "highlight-color-rexroof"))
+			bgColorCode = fmt.Sprintf("\033[48;2;%sm", hexRGB("#755ebc", "highlight-color-highlight"))
+		} else if strings.Contains(message.Message, "rexroof") {
+			bgColorCode = fmt.Sprintf("\033[48;2;%sm", hexRGB("#b54624", "highlight-color-rexroof"))
 		}
+
 		fmt.Printf("[%s%s%s]: %s%s%s\n", colorCode, message.User.Name, resetColor, bgColorCode, message.Message, resetColor)
 	})
 
